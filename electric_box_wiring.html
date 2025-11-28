@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>箱子接线</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .wiring-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .wiring-area {
+            position: relative;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .wiring-point {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            position: absolute;
+        }
+        
+        .wiring-point:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        .wiring-point.selected {
+            border-color: yellow;
+            transform: scale(1.2);
+            box-shadow: 0 0 20px yellow;
+        }
+        
+        .wiring-point.connected {
+            border-color: #10b981;
+        }
+        
+        #wiringSVG {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .points-container {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 2;
+        }
+        
+        .left-points, .right-points {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wiring-container">
+        <h2 class="text-3xl font-bold text-center text-yellow-400 mb-4">箱子接线</h2>
+        <p class="text-gray-300 text-center mb-6">
+            发现一个箱子，需要连线解锁。里面好像有东西<br>
+            89  82  66
+        </p>
+        <div class="wiring-area" id="wiringArea">
+            <svg id="wiringSVG"></svg>
+            <div class="points-container">
+                <!-- 左侧三个点 -->
+                <div class="left-points">
+                    <div id="leftPoint1" class="wiring-point" style="background: #ef4444; top: 0;" data-index="0" data-color="red"></div>
+                    <div id="leftPoint2" class="wiring-point" style="background: #3b82f6; top: 50%; transform: translateY(-50%);" data-index="1" data-color="blue"></div>
+                    <div id="leftPoint3" class="wiring-point" style="background: #fbbf24; bottom: 0;" data-index="2" data-color="yellow"></div>
+                </div>
+                <!-- 右侧三个点 -->
+                <div class="right-points">
+                    <div id="rightPoint1" class="wiring-point" style="background: #3b82f6; top: 0;" data-index="0" data-color="blue"></div>
+                    <div id="rightPoint2" class="wiring-point" style="background: #ef4444; top: 50%; transform: translateY(-50%);" data-index="1" data-color="red"></div>
+                    <div id="rightPoint3" class="wiring-point" style="background: #fbbf24; bottom: 0;" data-index="2" data-color="yellow"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-sm text-gray-400 text-center mt-4">
+            点击左侧的点，然后点击右侧对应的点进行连接。必须按照正确的顺序连接。
+        </div>
+    </div>
+
+    <script>
+        let selectedLeft = null;
+        let connections = [];
+        // 正确的连接（颜色对应）：黄→黄、红→红、蓝→蓝
+        // 左侧：红(0) 蓝(1) 黄(2)
+        // 右侧：蓝(0) 红(1) 黄(2)
+        const correctConnections = [
+            {left: 2, right: 2}, // 黄→黄
+            {left: 0, right: 1}, // 红→红
+            {left: 1, right: 0}  // 蓝→蓝
+        ];
+        // 正确的连接顺序：黄-红-蓝（按顺序连接）
+        const correctOrder = [
+            {left: 2, right: 2, color: 'yellow'}, // 第1条：黄
+            {left: 0, right: 1, color: 'red'},   // 第2条：红
+            {left: 1, right: 0, color: 'blue'}   // 第3条：蓝
+        ];
+        let connectionOrder = []; // 记录连接顺序
+        
+        const svg = document.getElementById('wiringSVG');
+        const wiringArea = document.getElementById('wiringArea');
+        
+        // 为左侧点添加点击事件
+        for (let i = 1; i <= 3; i++) {
+            const leftPoint = document.getElementById(`leftPoint${i}`);
+            if (leftPoint) {
+                leftPoint.addEventListener('click', () => selectLeftPoint(i - 1));
+            }
+        }
+        
+        // 为右侧点添加点击事件
+        for (let i = 1; i <= 3; i++) {
+            const rightPoint = document.getElementById(`rightPoint${i}`);
+            if (rightPoint) {
+                rightPoint.addEventListener('click', () => selectRightPoint(i - 1));
+            }
+        }
+        
+        function selectLeftPoint(index) {
+            // 如果已经连接过这个点，先移除连接
+            const existingConnection = connections.find(c => c.left === index);
+            if (existingConnection) {
+                removeConnection(existingConnection);
+            }
+            
+            // 选中左侧点
+            selectedLeft = index;
+            
+            // 更新样式
+            for (let i = 1; i <= 3; i++) {
+                const leftPoint = document.getElementById(`leftPoint${i}`);
+                if (leftPoint) {
+                    if (i - 1 === index) {
+                        leftPoint.classList.add('selected');
+                    } else {
+                        leftPoint.classList.remove('selected');
+                    }
+                }
+            }
+        }
+        
+        function selectRightPoint(index) {
+            if (selectedLeft === null) return;
+            
+            const leftIndex = selectedLeft;
+            
+            // 获取左侧点的颜色
+            const leftPoint = document.getElementById(`leftPoint${leftIndex + 1}`);
+            const rightPoint = document.getElementById(`rightPoint${index + 1}`);
+            if (!leftPoint || !rightPoint) return;
+            
+            const leftColor = leftPoint.getAttribute('data-color');
+            const rightColor = rightPoint.getAttribute('data-color');
+            
+            // 检查颜色是否匹配
+            if (leftColor !== rightColor) {
+                // 颜色不匹配，立即失败
+                triggerFailure('颜色不匹配');
+                return;
+            }
+            
+            // 检查连接顺序
+            const expectedOrder = correctOrder[connectionOrder.length];
+            if (!expectedOrder) {
+                // 已经连接了3条线，不应该再连接
+                triggerFailure('连接顺序错误');
+                return;
+            }
+            
+            // 检查是否是按顺序连接（黄-红-蓝）
+            if (leftIndex !== expectedOrder.left || index !== expectedOrder.right) {
+                // 顺序不对，立即失败
+                triggerFailure('连接顺序错误');
+                return;
+            }
+            
+            // 如果已经连接过这个右侧点，先移除连接
+            const existingConnection = connections.find(c => c.right === index);
+            if (existingConnection) {
+                removeConnection(existingConnection);
+            }
+            
+            // 创建连接
+            createConnection(leftIndex, index, leftColor);
+            
+            // 检查是否完成
+            checkWiring();
+            
+            // 重置选中状态
+            selectedLeft = null;
+            for (let i = 1; i <= 3; i++) {
+                const leftPoint = document.getElementById(`leftPoint${i}`);
+                if (leftPoint) {
+                    leftPoint.classList.remove('selected');
+                }
+            }
+        }
+        
+        function createConnection(leftIndex, rightIndex, color) {
+            // 获取点的位置
+            const leftPoint = document.getElementById(`leftPoint${leftIndex + 1}`);
+            const rightPoint = document.getElementById(`rightPoint${rightIndex + 1}`);
+            if (!leftPoint || !rightPoint) return;
+            
+            const areaRect = wiringArea.getBoundingClientRect();
+            const leftRect = leftPoint.getBoundingClientRect();
+            const rightRect = rightPoint.getBoundingClientRect();
+            
+            const x1 = leftRect.left + leftRect.width / 2 - areaRect.left;
+            const y1 = leftRect.top + leftRect.height / 2 - areaRect.top;
+            const x2 = rightRect.left + rightRect.width / 2 - areaRect.left;
+            const y2 = rightRect.top + rightRect.height / 2 - areaRect.top;
+            
+            // 根据颜色设置线的颜色
+            let strokeColor = '#3b82f6'; // 默认蓝色
+            if (color === 'red') strokeColor = '#ef4444';
+            else if (color === 'yellow') strokeColor = '#fbbf24';
+            else if (color === 'blue') strokeColor = '#3b82f6';
+            
+            // 创建SVG线
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1);
+            line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2);
+            line.setAttribute('y2', y2);
+            line.setAttribute('stroke', strokeColor);
+            line.setAttribute('stroke-width', '4');
+            line.setAttribute('opacity', '0.8');
+            
+            svg.appendChild(line);
+            
+            // 保存连接
+            const connection = {
+                left: leftIndex,
+                right: rightIndex,
+                color: color,
+                line: line
+            };
+            connections.push(connection);
+            connectionOrder.push(connection);
+            
+            // 标记点已连接
+            leftPoint.classList.add('connected');
+            rightPoint.classList.add('connected');
+        }
+        
+        function removeConnection(connection) {
+            // 移除SVG线
+            if (connection.line && connection.line.parentNode) {
+                connection.line.parentNode.removeChild(connection.line);
+            }
+            
+            // 从连接列表中移除
+            const index = connections.indexOf(connection);
+            if (index > -1) {
+                connections.splice(index, 1);
+            }
+            
+            // 从连接顺序中移除
+            const orderIndex = connectionOrder.indexOf(connection);
+            if (orderIndex > -1) {
+                connectionOrder.splice(orderIndex, 1);
+            }
+            
+            // 移除点的连接标记
+            const leftPoint = document.getElementById(`leftPoint${connection.left + 1}`);
+            const rightPoint = document.getElementById(`rightPoint${connection.right + 1}`);
+            if (leftPoint) leftPoint.classList.remove('connected');
+            if (rightPoint) rightPoint.classList.remove('connected');
+        }
+        
+        function triggerFailure(reason) {
+            console.log('连线失败:', reason);
+            // 立即触发失败结局
+            setTimeout(() => {
+                // 通知主窗口连线失败
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'electricBoxWiringFailed'
+                    }, '*');
+                }
+                window.close();
+            }, 300);
+        }
+        
+        function checkWiring() {
+            // 如果连接了3条线，检查是否正确
+            if (connections.length === 3) {
+                // 检查连接是否正确（颜色和位置）
+                const correct = correctConnections.every(correctConn => {
+                    return connections.some(conn => 
+                        conn.left === correctConn.left && conn.right === correctConn.right
+                    );
+                });
+                
+                // 检查顺序是否正确（黄-红-蓝）
+                const orderCorrect = connectionOrder.length === 3 &&
+                    connectionOrder[0].color === 'yellow' &&
+                    connectionOrder[1].color === 'red' &&
+                    connectionOrder[2].color === 'blue';
+                
+                if (correct && orderCorrect) {
+                    // 全部正确
+                    setTimeout(() => {
+                        // 通知主窗口连线成功
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'electricBoxWiringSuccess'
+                            }, '*');
+                        }
+                        window.close();
+                    }, 500);
+                } else {
+                    // 有错误，触发失败结局
+                    triggerFailure('连接不正确或顺序错误');
+                }
+            }
+        }
+        
+        // 监听窗口大小变化，重新绘制连线
+        window.addEventListener('resize', () => {
+            // 重新绘制所有连线
+            const oldConnections = [...connections];
+            connections = [];
+            svg.innerHTML = '';
+            
+            oldConnections.forEach(conn => {
+                createConnection(conn.left, conn.right);
+            });
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实验档案 - 城郊医院谜案</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+        }
+        
+        .file-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .file-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .file-item.selected {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+        }
+        
+        .file-content {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+        }
+        
+        .confidential {
+            color: #ff4444;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+        
+        .highlight {
+            background: rgba(255, 255, 0, 0.3);
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        
+        .redacted {
+            background: #000;
+            color: #000;
+            padding: 2px 4px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        
+        .redacted:hover {
+            background: #333;
+            color: #fff;
+        }
+        
+        .patient-record {
+            border-left: 4px solid #ff4444;
+            padding-left: 12px;
+            margin: 8px 0;
+        }
+        
+        .experiment-log {
+            border-left: 4px solid #44ff44;
+            padding-left: 12px;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="min-h-screen p-4">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold mb-2" style="font-family: 'Noto Serif SC', serif;">实验档案</h1>
+                <p class="text-gray-300">城郊医院秘密实验记录 - 机密文件</p>
+                <div class="confidential mt-2">⚠️ 绝密等级：最高机密 ⚠️</div>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- File List -->
+                <div class="lg:col-span-1">
+                    <div class="file-container rounded-xl p-4">
+                        <h2 class="text-xl font-bold mb-4">档案列表</h2>
+                        <div class="space-y-3">
+                            <div class="file-item p-3 rounded-lg" onclick="selectFile('experiment_log')">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🧪</span>
+                                    <div>
+                                        <div class="font-bold">实验日志</div>
+                                        <div class="text-xs text-gray-400">2024-11-15</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="file-item p-3 rounded-lg" onclick="selectFile('patient_list')">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📋</span>
+                                    <div>
+                                        <div class="font-bold">患者名单</div>
+                                        <div class="text-xs text-gray-400">2024-11-18</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="file-item p-3 rounded-lg" onclick="selectFile('approval_docs')">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📄</span>
+                                    <div>
+                                        <div class="font-bold">批准文件</div>
+                                        <div class="text-xs text-gray-400">2024-11-20</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="file-item p-3 rounded-lg" onclick="selectFile('research_notes')">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">📝</span>
+                                    <div>
+                                        <div class="font-bold">研究笔记</div>
+                                        <div class="text-xs text-gray-400">2024-11-22</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="file-item p-3 rounded-lg" onclick="selectFile('missing_report')">
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-2xl">🔍</span>
+                                    <div>
+                                        <div class="font-bold">失踪报告</div>
+                                        <div class="text-xs text-gray-400">2024-11-25</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Content -->
+                <div class="lg:col-span-2">
+                    <div class="file-container rounded-xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold" id="currentFileTitle">选择文件查看内容</h2>
+                            <div class="text-sm text-gray-400" id="currentFileDate"></div>
+                        </div>
+                        
+                        <div class="file-content rounded-lg p-6 min-h-96" id="fileContent">
+                            <div class="text-center text-gray-400 py-12">
+                                <div class="text-6xl mb-4">📁</div>
+                                <p>请选择左侧档案文件查看详细内容</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Evidence Summary -->
+            <div class="file-container rounded-xl p-6 mt-6">
+                <h2 class="text-2xl font-bold mb-4">证据总结</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 text-red-400">关键发现</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>• <span class="highlight">非法人体实验</span>证据确凿</li>
+                            <li>• <span class="highlight">陈院长</span>为主要负责人</li>
+                            <li>• <span class="highlight">婷护士</span>发现真相后被失踪</li>
+                            <li>• 多名患者成为<span class="highlight">实验对象</span></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2 text-yellow-400">涉案人员</h3>
+                        <ul class="space-y-2 text-sm">
+                            <li>• 陈橘子（院长）- 主谋</li>
+                            <li>• 实习医生 - 协助实验</li>
+                            <li>• 档案管理员 - 篡改记录</li>
+                            <li>• 维修工 - 处理痕迹</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex justify-center space-x-4 mt-6">
+                <button onclick="downloadEvidence()" class="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg font-medium transition-colors">
+                    下载证据
+                </button>
+                <button onclick="window.history.back()" class="bg-gray-600 hover:bg-gray-700 px-6 py-3 rounded-lg font-medium transition-colors">
+                    返回游戏
+                </button>
+                <button onclick="reportToPolice()" class="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors">
+                    提交证据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileContents = {
+            experiment_log: {
+                title: '实验日志',
+                date: '2024-11-20',
+                content: `
+                    <div class="experiment-log">
+                        <h3 class="text-lg font-bold mb-3">人体实验记录 - 第47号实验</h3>
+                        
+                        <p class="mb-3"><strong>实验目的：</strong>测试新型药物对人体神经系统的影响</p>
+                        
+                        <p class="mb-3"><strong>实验对象：</strong>患者X-2471（<span class="redacted" onclick="revealText(this)">姓名已删除</span>）</p>
+                        
+                        <p class="mb-3"><strong>实验过程：</strong></p>
+                        <ul class="ml-6 mb-3 space-y-1">
+                            <li>• 14:30 - 注射实验药物A-13</li>
+                            <li>• 15:00 - 观察初期反应</li>
+                            <li>• 15:45 - <span class="highlight">出现强烈副作用</span></li>
+                            <li>• 16:20 - 紧急抢救措施</li>
+                            <li>• 17:10 - 实验终止</li>
+                        </ul>
+                        
+                        <p class="mb-3"><strong>实验结果：</strong>对象出现严重神经系统损伤，需要长期监护</p>
+                        
+                        <p class="mb-3"><strong>记录员：</strong>陈橘子</p>
+                        
+                        <div class="text-red-400 text-sm mt-4">
+                            ⚠️ 本文件涉及非法药物实验，严禁外泄
+                        </div>
+                    </div>
+                `
+            },
+            patient_list: {
+                title: '患者名单',
+                date: '2024-11-18',
+                content: `
+                    <div class="patient-record">
+                        <h3 class="text-lg font-bold mb-3">特殊实验患者名单</h3>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <strong>编号：X-2471</strong><br>
+                                姓名：<span class="redacted" onclick="revealText(this)">张XX</span><br>
+                                年龄：34岁<br>
+                                实验日期：2024-11-10<br>
+                                状态：<span class="text-red-400">神经系统损伤</span>
+                            </div>
+                            
+                            <div>
+                                <strong>编号：X-2472</strong><br>
+                                姓名：<span class="redacted" onclick="revealText(this)">李XX</span><br>
+                                年龄：28岁<br>
+                                实验日期：2024-11-12<br>
+                                状态：<span class="text-red-400">失踪</span>
+                            </div>
+                            
+                            <div>
+                                <strong>编号：X-2473</strong><br>
+                                姓名：<span class="redacted" onclick="revealText(this)">王XX</span><br>
+                                年龄：45岁<br>
+                                实验日期：2024-11-14<br>
+                                状态：<span class="text-red-400">昏迷</span>
+                            </div>
+                            
+                            <div>
+                                <strong>编号：X-2474</strong><br>
+                                姓名：<span class="redacted" onclick="revealText(this)">婷XX</span><br>
+                                年龄：26岁<br>
+                                实验日期：2024-11-17<br>
+                                状态：<span class="text-red-400">发现真相后失踪</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-yellow-400 text-sm">
+                            🔍 婷护士发现实验真相后试图举报，随后神秘失踪
+                        </div>
+                    </div>
+                `
+            },
+            approval_docs: {
+                title: '批准文件',
+                date: '2024-11-20',
+                content: `
+                    <div class="experiment-log">
+                        <h3 class="text-lg font-bold mb-3">秘密实验项目批准书</h3>
+                        
+                        <p class="mb-3"><strong>项目名称：</strong>新型神经系统药物临床实验</p>
+                        
+                        <p class="mb-3"><strong>项目负责人：</strong><span class="highlight">陈橘子</span></p>
+                        
+                        <p class="mb-3"><strong>批准机构：</strong>城郊医院董事会</p>
+                        
+                        <p class="mb-3"><strong>实验目的：</strong>开发新型治疗神经系统疾病的特效药物</p>
+                        
+                        <p class="mb-3"><strong>实验方法：</strong></p>
+                        <ul class="ml-6 mb-3 space-y-1">
+                            <li>• 选择符合条件的志愿患者</li>
+                            <li>• 在严格监控下进行药物测试</li>
+                            <li>• 记录所有反应和副作用</li>
+                            <li>• <span class="redacted" onclick="revealText(this)">数据删除</span></li>
+                        </ul>
+                        
+                        <p class="mb-3"><strong>批准日期：</strong>2024-10-15</p>
+                        
+                        <p class="mb-3"><strong>有效期：</strong>2024-10-15 至 2025-10-14</p>
+                        
+                        <div class="text-red-400 text-sm mt-4">
+                            ⚠️ 本文件为伪造文件，实际为非法药物实验掩护
+                        </div>
+                    </div>
+                `
+            },
+            research_notes: {
+                title: '研究笔记',
+                date: '2024-11-22',
+                content: `
+                    <div class="experiment-log">
+                        <h3 class="text-lg font-bold mb-3">陈院长私人研究笔记</h3>
+                        
+                        <p class="mb-3"><strong>日期：</strong>2024-11-22</p>
+                        
+                        <p class="mb-3"><strong>研究进展：</strong></p>
+                        <p class="mb-3">实验药物x-17在神经系统方面的效果超出预期，但副作用严重。</p>
+                        
+                        <p class="mb-3"><strong>问题记录：</strong></p>
+                        <ul class="ml-6 mb-3 space-y-1">
+                            <li>• 患者X-2471出现不可逆神经损伤</li>
+                            <li>• 婷护士开始怀疑实验真实性</li>
+                            <li>• 需要加强保密措施</li>
+                            <li>• 考虑<span class="highlight">处理知情人员</span></li>
+                        </ul>
+                        
+                        <p class="mb-3"><strong>下一步计划：</strong></p>
+                        <p class="mb-3">1. 继续实验，收集更多数据</p>
+                        <p class="mb-3">2. 处理婷护士问题</p>
+                        <p class="mb-3">3. 准备应对可能的调查</p>
+                        
+                        <div class="text-red-400 text-sm mt-4">
+                            🔍 这本笔记暴露了陈院长的犯罪意图
+                        </div>
+                    </div>
+                `
+            },
+            missing_report: {
+                title: '失踪报告',
+                date: '2024-11-25',
+                content: `
+                    <div class="patient-record">
+                        <h3 class="text-lg font-bold mb-3">人员失踪事件报告</h3>
+                        
+                        <p class="mb-3"><strong>失踪人员：</strong>婷护士<span class="highlight"></span></p>
+                        
+                        <p class="mb-3"><strong>失踪时间：</strong>2024-11-26 夜间</p>
+                        
+                        <p class="mb-3"><strong>最后出现地点：</strong>手术室</p>
+                        
+                        <p class="mb-3"><strong>失踪经过：</strong></p>
+                        <ul class="ml-6 mb-3 space-y-1">
+                            <li>• 20:00 - 正常值班</li>
+                            <li>• 02:22 - 监控显示进入手术室</li>
+                            <li>• 02:48 - 陈院长离开手术室</li>
+                            <li>• 此后：<span class="highlight">婷护士再未出现</span></li>
+                        </ul>
+                        
+                        <p class="mb-3"><strong>调查进展：</strong></p>
+                        <p class="mb-3">- 手术室发现可疑血迹</p>
+                        <p class="mb-3">- 监控记录部分丢失</p>
+                        <p class="mb-3">- 陈院长声称不知情</p>
+                        
+                        <p class="mb-3"><strong>备注：</strong>婷护士失踪前曾询问实验相关事宜</p>
+                        
+                        <div class="text-red-400 text-sm mt-4">
+                            🔍 这份报告证实了婷护士的失踪与医院秘密实验有关
+                        </div>
+                    </div>
+                `
+            }
+        };
+        
+        function selectFile(fileId) {
+            // Remove selected class from all files
+            document.querySelectorAll('.file-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked file
+            event.target.closest('.file-item').classList.add('selected');
+            
+            const file = fileContents[fileId];
+            if (file) {
+                document.getElementById('currentFileTitle').textContent = file.title;
+                document.getElementById('currentFileDate').textContent = file.date;
+                document.getElementById('fileContent').innerHTML = file.content;
+            }
+        }
+        
+        function revealText(element) {
+            const originalText = element.textContent;
+            element.textContent = '[已删除的信息]';
+            element.style.background = 'rgba(255, 0, 0, 0.3)';
+            element.style.color = '#fff';
+            
+            setTimeout(() => {
+                element.textContent = originalText;
+                element.style.background = 'rgba(255, 255, 0, 0.3)';
+            }, 1000);
+        }
+        
+        function downloadEvidence() {
+            const evidence = `城郊医院非法实验证据
+            
+关键证据：
+1. 人体实验日志 - 证明非法实验存在
+2. 患者名单 - 多名受害者信息
+3. 批准文件 - 伪造的合法掩护
+4. 研究笔记 - 陈院长的犯罪意图
+5. 失踪报告 - 婷护士失踪真相
+
+结论：陈橘子院长组织非法药物实验，婷护士试图举报真相后被灭口。
+            `;
+            
+            const blob = new Blob([evidence], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '医院犯罪证据.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function reportToPolice() {
+            // 打开文件选择对话框
+            const dialogWindow = window.open('submit_evidence.html', '提交证据', 'width=800,height=600,scrollbars=no,resizable=yes');
+            
+            // 监听来自对话框的消息
+            window.addEventListener('message', function handleEvidenceMessage(event) {
+                if (event.data && event.data.type === 'closeAllAndReturnToMenu') {
+                    // 移除监听器
+                    window.removeEventListener('message', handleEvidenceMessage);
+                    // 关闭当前窗口并返回主菜单
+                    returnToMainMenu();
+                }
+            });
+        }
+        
+        function returnToMainMenu() {
+            // 通知主游戏窗口返回主菜单
+            if (window.opener) {
+                window.opener.postMessage({ 
+                    type: 'closeAllAndReturnToMenu', 
+                    success: true 
+                }, '*');
+            }
+            
+            // 关闭当前窗口
+            try {
+                window.close();
+            } catch(e) {
+                // 如果无法关闭，直接跳转
+                window.location.href = 'start.html';
+            }
+        }
+        
+        // 监听来自子窗口（submit_evidence.html）的消息
+        window.addEventListener('message', function handleChildWindowMessage(event) {
+            if (event.data && event.data.type === 'closeAllAndReturnToMenu') {
+                // 如果是成功，可能需要打开通关画面（但submit_evidence已经处理了）
+                // 直接返回主菜单
+                returnToMainMenu();
+            }
+        });
+    </script>
+</body>
+</html>

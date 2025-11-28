@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配药</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .medicine-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .medicine-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .medicine-input {
+            width: 80px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            color: white;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        .medicine-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .total-display {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="medicine-container">
+        <h2 class="text-2xl font-bold text-center text-yellow-400 mb-6">配药</h2>
+        <p class="text-gray-300 text-center mb-6">A药需要多少ml？</p>
+        
+        <div class="medicine-item">
+            <span class="text-red-400 font-bold text-lg">A药</span>
+            <div class="flex items-center gap-2">
+                <input type="number" id="medicineA" class="medicine-input" min="0" max="30" value="0">
+                <span class="text-gray-400">ml</span>
+            </div>
+        </div>
+        
+        <div class="medicine-item">
+            <span class="text-blue-400 font-bold text-lg">B药</span>
+            <div class="flex items-center gap-2">
+                <input type="number" id="medicineB" class="medicine-input" min="0" max="30" value="0">
+                <span class="text-gray-400">ml</span>
+            </div>
+        </div>
+        
+        <div class="medicine-item">
+            <span class="text-green-400 font-bold text-lg">C药</span>
+            <div class="flex items-center gap-2">
+                <input type="number" id="medicineC" class="medicine-input" min="0" max="30" value="0">
+                <span class="text-gray-400">ml</span>
+            </div>
+        </div>
+        
+        <div class="total-display">
+            <span class="text-gray-300">总量: </span>
+            <span id="totalMedicine" class="text-white font-bold text-xl">0</span>
+            <span class="text-gray-300">ml / 30ml</span>
+        </div>
+        
+        <button id="submitBtn" class="submit-btn">提交</button>
+    </div>
+    
+    <script>
+        const medicineA = document.getElementById('medicineA');
+        const medicineB = document.getElementById('medicineB');
+        const medicineC = document.getElementById('medicineC');
+        const totalDisplay = document.getElementById('totalMedicine');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // 更新总量显示
+        function updateTotal() {
+            const a = parseInt(medicineA.value) || 0;
+            const b = parseInt(medicineB.value) || 0;
+            const c = parseInt(medicineC.value) || 0;
+            const sum = a + b + c;
+            totalDisplay.textContent = sum;
+        }
+        
+        medicineA.addEventListener('input', updateTotal);
+        medicineB.addEventListener('input', updateTotal);
+        medicineC.addEventListener('input', updateTotal);
+        
+        // 检查配药是否正确
+        // A药：B药：C药 = 3:2:1，总量30ml
+        // 即 A=15ml, B=10ml, C=5ml
+        function checkMedicineMix() {
+            const a = parseInt(medicineA.value) || 0;
+            const b = parseInt(medicineB.value) || 0;
+            const c = parseInt(medicineC.value) || 0;
+            const total = a + b + c;
+            
+            // 检查总量是否为30ml
+            if (total !== 30) {
+                return false;
+            }
+            
+            // 检查比例是否为3:2:1
+            // 即 A=15, B=10, C=5
+            if (a === 15 && b === 10 && c === 5) {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // 提交按钮点击
+        submitBtn.addEventListener('click', () => {
+            if (checkMedicineMix()) {
+                // 配药成功
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'medicineMixSuccess'
+                    }, '*');
+                }
+                window.close();
+            } else {
+                // 配药失败
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'medicineMixFailed'
+                    }, '*');
+                }
+                window.close();
+            }
+        });
+        
+        // 初始化总量显示
+        updateTotal();
+    </script>
+</body>
+</html>
+

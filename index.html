@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城郊医院谜案 - 游戏界面</title>
+    <!-- Tailwind CSS CDN (开发环境，生产环境建议使用本地构建版本) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .title-font {
+            font-family: 'Noto Serif SC', serif;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .description-box {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.85), rgba(20, 20, 40, 0.95));
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            min-height: 200px;
+        }
+        
+        .choice-button {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            font-size: 1.125rem;
+            padding: 1rem 1.5rem;
+        }
+        
+        .choice-button:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .clue-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .clue-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .scene-transition {
+            animation: sceneFade 0.8s ease-in-out;
+        }
+        
+        @keyframes sceneFade {
+            0% { opacity: 0; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .typing-animation {
+            overflow: hidden;
+            border-right: 2px solid #fff;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #fff; }
+        }
+        
+        
+        .password-input {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 4px;
+        }
+        
+        .password-input:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        #failureScreen {
+            pointer-events: all;
+        }
+
+        #cutLeft, #cutRight {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 1));
+            box-shadow: inset 0 0 50px rgba(255, 0, 0, 0.3);
+        }
+
+        /* 人影阴影动画 */
+        #shadowPerson {
+            transition: all 3s ease-in-out;
+            will-change: transform, opacity;
+            filter: drop-shadow(0 0 40px rgba(139, 0, 0, 0.5));
+        }
+        
+        #shadowPerson::before {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, rgba(139, 0, 0, 0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        .room-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .room-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* 鲜血流淌效果样式 - 改进的液体效果 */
+        .blood-stream {
+            position: absolute;
+            top: -5%;
+            background: linear-gradient(to bottom,
+                rgba(139, 0, 0, 0.98) 0%,
+                rgba(220, 20, 60, 0.95) 8%,
+                rgba(139, 0, 0, 0.92) 15%,
+                rgba(220, 20, 60, 0.93) 22%,
+                rgba(139, 0, 0, 0.9) 30%,
+                rgba(220, 20, 60, 0.91) 38%,
+                rgba(139, 0, 0, 0.88) 45%,
+                rgba(220, 20, 60, 0.89) 52%,
+                rgba(139, 0, 0, 0.86) 60%,
+                rgba(220, 20, 60, 0.87) 68%,
+                rgba(139, 0, 0, 0.84) 75%,
+                rgba(220, 20, 60, 0.85) 82%,
+                rgba(139, 0, 0, 0.82) 90%,
+                rgba(220, 20, 60, 0.83) 95%,
+                rgba(139, 0, 0, 0.8) 100%);
+            border-radius: 0 0 50% 50% / 0 0 100% 100%;
+            box-shadow: 
+                0 0 25px rgba(220, 20, 60, 0.7),
+                inset -2px 0 15px rgba(139, 0, 0, 0.5),
+                inset 2px 0 15px rgba(139, 0, 0, 0.5),
+                0 0 50px rgba(139, 0, 0, 0.4);
+            filter: blur(0.8px);
+            animation: bloodFlow 0.15s ease-in-out infinite;
+            transform-origin: top center;
+            will-change: transform;
+        }
+
+        @keyframes bloodFlow {
+            0%, 100% {
+                transform: translateX(0) scaleY(1) scaleX(1);
+            }
+            20% {
+                transform: translateX(-0.5px) scaleY(1.01) scaleX(1.02);
+            }
+            40% {
+                transform: translateX(0.5px) scaleY(1) scaleX(0.98);
+            }
+            60% {
+                transform: translateX(0) scaleY(1.01) scaleX(1.01);
+            }
+            80% {
+                transform: translateX(-0.3px) scaleY(1) scaleX(1);
+            }
+        }
+
+        .blood-drip {
+            position: absolute;
+            top: -10px;
+            background: radial-gradient(ellipse at center,
+                rgba(220, 20, 60, 0.95) 0%,
+                rgba(220, 20, 60, 0.85) 30%,
+                rgba(139, 0, 0, 0.8) 60%,
+                rgba(139, 0, 0, 0.6) 100%);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 18px rgba(220, 20, 60, 0.8),
+                inset 0 0 25px rgba(139, 0, 0, 0.6),
+                0 0 30px rgba(139, 0, 0, 0.4);
+            filter: blur(0.6px);
+            animation: dripFall 0.2s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        @keyframes dripFall {
+            0%, 100% {
+                transform: translateY(0) scale(1) translateX(0);
+            }
+            25% {
+                transform: translateY(-1.5px) scale(1.03) translateX(-0.5px);
+            }
+            50% {
+                transform: translateY(-2px) scale(1.05) translateX(0);
+            }
+            75% {
+                transform: translateY(-1px) scale(1.02) translateX(0.5px);
+            }
+        }
+
+        .blood-splash {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: radial-gradient(circle,
+                rgba(220, 20, 60, 0.9) 0%,
+                rgba(139, 0, 0, 0.7) 60%,
+                transparent 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(220, 20, 60, 0.6);
+            animation: splash 0.3s ease-out forwards;
+        }
+
+        @keyframes splash {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <!-- Main Game Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="game-container rounded-2xl shadow-2xl w-full h-screen max-h-screen overflow-hidden">
+            
+            <!-- Game Header -->
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-4 border-b border-gray-700">
+                <div class="flex justify-between items-center">
+                    <h1 class="title-font text-3xl font-bold text-white">城郊医院谜案</h1>
+                    <div class="flex space-x-4">
+                        <button id="mapBtn" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg text-base font-medium transition-colors hidden">
+                            医院地图
+                        </button>
+                        <button id="saveBtn" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg text-base font-medium transition-colors">
+                            保存游戏
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Game Area -->
+            <div class="flex h-full w-full">
+                
+                <!-- Main Panel - Scene & Text Description (Full Width) -->
+                <div class="w-full relative flex flex-col">
+                    <!-- Scene Background -->
+                    <div id="sceneContainer" class="relative w-full h-96 bg-cover bg-center scene-transition" style="background-image: url('scene_hospital_corridor.png'); background-size: cover; background-position: center;">
+                        <!-- Interactive Hotspots -->
+                        <div id="hotspotsContainer" class="absolute inset-0">
+                            <!-- Hotspots will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Text Description Box -->
+                    <div id="descriptionBox" class="description-box m-6 p-8 rounded-xl flex-1 overflow-y-auto">
+                            <div id="descriptionText" class="text-lg leading-relaxed mb-6 text-gray-200">
+                            你来到了位于城郊的医院。
+                        </div>
+                        
+                        <!-- Action Choices -->
+                        <div id="choicesContainer" class="space-y-4">
+                            <button class="choice-button w-full p-4 rounded-lg text-left text-lg" onclick="startInvestigation()">
+                                开始调查医院
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Puzzle Modal -->
+    <div id="puzzleModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="puzzleTitle" class="text-2xl font-bold mb-4 text-center text-yellow-400">🧩 谜题</h3>
+            <div id="puzzleDescription" class="text-gray-300 mb-4 leading-relaxed"></div>
+            <div id="puzzleQuestion" class="text-lg font-bold mb-4 text-white"></div>
+            
+            <!-- 颜色接线界面 -->
+            <div id="colorWiringContainer" class="hidden mb-4">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <h4 class="text-white mb-2">左侧</h4>
+                        <div id="leftColors" class="space-y-2"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-white mb-2">右侧</h4>
+                        <div id="rightColors" class="space-y-2"></div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-400 mb-2">点击左侧颜色，然后点击右侧对应颜色进行连接</div>
+                <div id="wiringConnections" class="mb-4"></div>
+            </div>
+            
+            <!-- 电梯电箱接线界面 -->
+            <div id="electricBoxWiringContainer" class="hidden mb-4">
+                <div class="relative" style="height: 400px; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px;">
+                    <svg id="wiringSVG" class="absolute inset-0 w-full h-full" style="pointer-events: none; z-index: 1;"></svg>
+                    <div class="absolute inset-0 flex items-center justify-between px-8" style="z-index: 2;">
+                        <!-- 左侧三个点 -->
+                        <div class="flex flex-col gap-8">
+                            <div id="leftPoint1" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #ef4444;" data-color="red" data-index="0"></div>
+                            <div id="leftPoint2" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #3b82f6;" data-color="blue" data-index="1"></div>
+                            <div id="leftPoint3" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #10b981;" data-color="green" data-index="2"></div>
+                        </div>
+                        <!-- 右侧三个点 -->
+                        <div class="flex flex-col gap-8">
+                            <div id="rightPoint1" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #3b82f6;" data-color="blue" data-index="0"></div>
+                            <div id="rightPoint2" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #ef4444;" data-color="red" data-index="1"></div>
+                            <div id="rightPoint3" class="w-12 h-12 rounded-full cursor-pointer border-4 border-white shadow-lg" style="background: #10b981;" data-color="green" data-index="2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-400 mt-2 text-center">
+                    点击左侧的点，然后点击右侧对应的点进行连接。正确连接：红→蓝、蓝→红、绿→绿
+                </div>
+            </div>
+            
+            <!-- 配药界面 -->
+            <div id="medicineContainer" class="hidden mb-4">
+                <div class="bg-gray-800 p-4 rounded-lg mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-red-400">A药</span>
+                        <input type="number" id="medicineA" class="w-20 px-2 py-1 bg-gray-700 rounded text-center" min="0" max="30" value="0">
+                        <span class="text-gray-400">ml</span>
+                    </div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-blue-400">B药</span>
+                        <input type="number" id="medicineB" class="w-20 px-2 py-1 bg-gray-700 rounded text-center" min="0" max="30" value="0">
+                        <span class="text-gray-400">ml</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-green-400">C药</span>
+                        <input type="number" id="medicineC" class="w-20 px-2 py-1 bg-gray-700 rounded text-center" min="0" max="30" value="0">
+                        <span class="text-gray-400">ml</span>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-400">
+                        总量: <span id="totalMedicine">0</span>ml / 30ml
+                    </div>
+                </div>
+            </div>
+            
+            <input type="text" id="puzzleInput" class="password-input w-full p-3 rounded-lg mb-4 text-xl" placeholder="输入答案...">
+            <div class="flex space-x-3">
+                <button id="confirmPuzzle" class="flex-1 bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-medium transition-colors">
+                    提交答案
+                </button>
+                <button id="cancelPuzzle" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Lock Modal -->
+    <div id="passwordModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-center">请输入密码</h3>
+            <input type="password" id="passwordInput" class="password-input w-full p-3 rounded-lg mb-4 text-2xl" maxlength="6" placeholder="------">
+            <div class="flex space-x-3">
+                <button id="confirmPassword" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    确认
+                </button>
+                <button id="cancelPassword" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Underground Elevator Password Modal -->
+    <div id="undergroundPasswordModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-center text-white">输入密码</h3>
+            <div id="binaryPasswordGrid" class="flex flex-wrap gap-2 mb-4 justify-center" style="max-width: 100%;">
+                <!-- 16个二进制格子将通过JS动态创建 -->
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="confirmUndergroundPassword()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    提交答案
+                </button>
+                <button onclick="hideUndergroundPasswordModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Basement Computer Password Modal -->
+    <div id="basementComputerPasswordModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-center text-white">输入密码</h3>
+            <input type="text" id="basementComputerPasswordInput" class="password-input w-full p-3 rounded-lg mb-2 text-xl text-center" placeholder="********-****-********" style="letter-spacing: 0.1em;">
+            <div class="text-sm text-gray-400 mb-4 text-center">提示：********-****-********</div>
+            <div class="flex space-x-3">
+                <button onclick="confirmBasementComputerPassword()" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    提交答案
+                </button>
+                <button onclick="hideBasementComputerPasswordModal()" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floor Map Modal -->
+    <div id="floorMapModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-md w-full mx-4">
+            <h3 id="floorMapTitle" class="text-xl font-bold mb-4 text-center text-white">各科室楼层分布</h3>
+            <div id="floorListContainer" class="space-y-2 mb-6 text-gray-300">
+                <div class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>神经外科</span>
+                    <span class="text-blue-400">2楼</span>
+                </div>
+                <div class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>普外科</span>
+                    <span class="text-blue-400">3楼</span>
+                </div>
+                <div class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>心内科</span>
+                    <span class="text-blue-400">4楼</span>
+                </div>
+                <div class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>呼吸内科</span>
+                    <span class="text-blue-400">5楼</span>
+                </div>
+                <div class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>手术室</span>
+                    <span class="text-blue-400">6楼</span>
+                </div>
+                <div id="floor7Option" class="flex justify-between p-2 hover:bg-gray-800 rounded">
+                    <span>护理部</span>
+                    <span class="text-blue-400">7楼</span>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-white mb-2">选择要前往的楼层：</label>
+                <input type="number" id="floorInput" class="password-input w-full p-3 rounded-lg mb-4 text-xl" min="2" max="7" placeholder="输入楼层数字">
+            </div>
+            <div class="flex space-x-3">
+                <button id="confirmFloor" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    确认
+                </button>
+                <button id="cancelFloor" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room Selection Modal -->
+    <div id="roomSelectionModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4 text-center text-white">护理部 - 选择病房</h3>
+            <p class="text-gray-300 text-center mb-6">你来到了7楼护理部，这里有701-720共20个病房。你要进入哪个房间？</p>
+            <div class="grid grid-cols-5 gap-3 mb-6">
+                <!-- 病房按钮将动态生成 -->
+            </div>
+            <div class="mb-4">
+                <label class="block text-white mb-2">或直接输入房间号：</label>
+                <input type="number" id="roomInput" class="password-input w-full p-3 rounded-lg mb-4 text-xl" min="701" max="720" placeholder="输入房间号（701-720）">
+            </div>
+            <div class="flex space-x-3">
+                <button id="confirmRoom" class="flex-1 bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    确认
+                </button>
+                <button id="cancelRoom" class="flex-1 bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shadow Figure (for wrong floor selection) -->
+    <div id="shadowFigure" class="fixed inset-0 z-50 hidden pointer-events-none">
+        <div id="shadowPerson" class="absolute bottom-0 left-1/2 transform -translate-x-1/2" style="opacity: 0; transform: translate(-50%, 0) scale(0.5);">
+            <div class="relative">
+                <!-- 人影轮廓 - 更精细的设计 -->
+                <div class="relative">
+                    <!-- 主体阴影 -->
+                    <div class="w-40 h-56 bg-black rounded-t-full opacity-95 blur-lg" 
+                         style="clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 75%, 75% 100%, 25% 100%, 0% 75%, 0% 25%); 
+                                filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 60px rgba(139, 0, 0, 0.3));">
+                    </div>
+                    <!-- 头部轮廓 -->
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-black rounded-full opacity-90 blur-md"
+                         style="filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));">
+                    </div>
+                    <!-- 身体轮廓 -->
+                    <div class="absolute top-16 left-1/2 transform -translate-x-1/2 w-32 h-40 bg-black rounded-lg opacity-90 blur-sm"></div>
+                </div>
+                <!-- 手术刀 - 更精细的设计 -->
+                <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-12">
+                    <!-- 刀身 -->
+                    <div class="relative">
+                        <div class="w-24 h-2.5 bg-gradient-to-r from-gray-100 to-gray-300 rounded-full shadow-2xl rotate-45" 
+                             style="filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)) drop-shadow(0 0 30px rgba(255, 255, 255, 0.3));">
+                        </div>
+                        <!-- 刀尖 -->
+                        <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-3 w-6 h-6 bg-gray-200 rounded-full shadow-xl"
+                             style="clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);">
+                        </div>
+                        <!-- 刀柄 -->
+                        <div class="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-2 w-4 h-4 bg-gray-400 rounded-full shadow-lg"></div>
+                    </div>
+                    <!-- 反光效果 -->
+                    <div class="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-6 w-16 h-1 bg-white opacity-30 rounded-full blur-sm rotate-45"></div>
+                </div>
+                <!-- 环境光效 -->
+                <div class="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black opacity-20 rounded-full blur-2xl"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Modal -->
+    <div id="mapModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-2xl w-full mx-4">
+            <h3 class="text-xl font-bold mb-4 text-center">医院地图</h3>
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div class="bg-blue-600 p-4 rounded-lg text-center cursor-pointer hover:bg-blue-700 transition-colors" onclick="changeScene('corridor')">
+                    医院大厅
+                </div>
+                <div id="map_operating" class="bg-gray-700 p-4 rounded-lg text-center cursor-pointer hover:bg-gray-600 transition-colors" onclick="changeScene('operating')">
+                    手术室
+                </div>
+                <div id="map_room717" class="bg-gray-700 p-4 rounded-lg text-center cursor-pointer hover:bg-gray-600 transition-colors" onclick="changeScene('room_717')">
+                    717房间
+                </div>
+                <div id="map_director" class="bg-gray-700 p-4 rounded-lg text-center cursor-pointer hover:bg-gray-600 transition-colors" onclick="changeScene('director')">
+                    院长室
+                </div>
+                <div id="map_monitor" class="bg-gray-700 p-4 rounded-lg text-center cursor-pointer hover:bg-gray-600 transition-colors" onclick="changeScene('monitor')">
+                    监控室
+                </div>
+                <div id="map_underground" class="bg-gray-800 p-4 rounded-lg text-center text-gray-500 cursor-not-allowed">
+                    地下室
+                </div>
+                <div id="map_archive" class="bg-gray-800 p-4 rounded-lg text-center text-gray-500 cursor-not-allowed">
+                    档案室
+                </div>
+            </div>
+            <button onclick="closeMapModal()" class="w-full bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                关闭
+            </button>
+        </div>
+    </div>
+
+    <!-- Ending Screen - Success -->
+    <div id="endingScreen" class="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-900 p-8 rounded-xl border border-gray-700 max-w-2xl w-full mx-4 text-center">
+            <h2 id="endingTitle" class="text-3xl font-bold mb-4"></h2>
+            <p id="endingDescription" class="text-lg mb-6 leading-relaxed"></p>
+            <div class="space-y-3">
+                <button onclick="restartGame()" class="w-full bg-blue-600 hover:bg-blue-700 py-3 rounded-lg font-medium transition-colors">
+                    重新开始
+                </button>
+                <button onclick="showCredits()" class="w-full bg-gray-600 hover:bg-gray-700 py-3 rounded-lg font-medium transition-colors">
+                    制作人员
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ending Screen - Failure (Discovered) -->
+    <div id="failureScreen" class="fixed inset-0 z-50 hidden">
+        <!-- Dark overlay -->
+        <div id="darkOverlay" class="absolute inset-0 bg-black opacity-0" style="transition: opacity 3s ease-in-out;"></div>
+        
+        <!-- Cut effect container -->
+        <div id="cutContainer" class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div id="cutLeft" class="absolute top-0 left-0 w-1/2 h-full bg-black" style="transform: translateX(-100%); transition: transform 1s ease-in-out;"></div>
+            <div id="cutRight" class="absolute top-0 right-0 w-1/2 h-full bg-black" style="transform: translateX(100%); transition: transform 1s ease-in-out;"></div>
+        </div>
+        
+        <!-- Final message -->
+        <div id="failureMessage" class="absolute inset-0 flex items-center justify-center opacity-0" style="transition: opacity 2s ease-in-out; pointer-events: auto;">
+            <div class="text-center text-white z-10">
+                <h2 class="text-5xl font-bold mb-4 text-red-600 drop-shadow-2xl">周侦探永远留在了城郊医院</h2>
+                <p class="text-2xl text-gray-300 mt-8 drop-shadow-lg">真相被永远掩埋...</p>
+                <button onclick="restartGame()" class="mt-12 bg-gray-800 hover:bg-gray-700 px-8 py-3 rounded-lg font-medium transition-colors">
+                    重新开始
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配音音频 -->
+    <audio id="peiyinAudio" preload="auto">
+        <source src="peiyin.mp3" type="audio/mpeg">
+        <source src="peiyin.MP3" type="audio/mpeg">
+    </audio>
+
+    <!-- 背景音乐 -->
+    <audio id="bgm1Audio" loop>
+        <source src="bgm1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm3Audio" loop>
+        <source src="bgm3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm4Audio" loop>
+        <source src="bgm4.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="game_updated.js"></script>
+</body>
+</html>
